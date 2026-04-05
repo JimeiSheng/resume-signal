@@ -1,4 +1,4 @@
-# Resume-Signal
+# resume-signal
 
 Transform unstructured experiences into structured, impact-driven résumés — designed for first-time applicants.
 
