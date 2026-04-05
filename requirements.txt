@@ -1,0 +1,4 @@
+streamlit==1.26.0
+pandas==2.1.0
+numpy==1.26.0
+openai==1.31.0
