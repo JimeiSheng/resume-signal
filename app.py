@@ -2,84 +2,211 @@ import streamlit as st
 from openai import OpenAI
 import os
 from dotenv import load_dotenv
+import json
+import re
 
 from app_modules.user_inputs import collect_user_inputs
-user_data = collect_user_inputs()
-
 from app_modules.ai_generate import ai_prompt
-prompt = ai_prompt(user_data)
 
-# ===== 加载 API Key =====
-load_dotenv()
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
+# ===== 页面配置 =====
 st.set_page_config(page_title="AI Resume Generator", layout="wide")
 st.title("📄 AI Resume Generator")
 
-# ===== 使用 GPT 生成 自我介绍 + 工作内容条目 =====
-if st.button("✏️ Gnerate Resume"):
-    with st.spinner("Generating resume content..."):
-        summary_text = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt['summary_prompt']}],
-            temperature=0.5
-        ).choices[0].message.content.strip()
+# ===== 初始化状态 =====
+if "resume" not in st.session_state:
+    st.session_state.resume = ""
 
-        work_result = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt['work_prompt']}],
-            temperature=0.4
-        ).choices[0].message.content.strip()
+if "debug" not in st.session_state:
+    st.session_state.debug = ""
 
-        project_result = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt['project_prompt']}],
-            temperature=0.4
-        ).choices[0].message.content.strip()
+# ===== API KEY =====
+load_dotenv()
+api_key = os.getenv("OPENAI_API_KEY")
 
-        skills = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt['skills_prompt']}],
-            temperature=0.3
-        ).choices[0].message.content
+if not api_key:
+    st.error("❌ OPENAI_API_KEY not found")
+    st.stop()
 
-        academic_achievements = client.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": prompt['edu_achievements_prompt']}],
-            temperature=0.2
-        ).choices[0].message.content
+client = OpenAI(api_key=api_key)
 
-# ===== 拼接最终简历文本（结构化） =====
-    resume = f"""
-**{user_data['name']}**  
-Mobile: {user_data['phone']}  
-Email: {user_data['email']}  
-{user_data['github']}
+# ===== 用户输入 =====
+user_data = collect_user_inputs()
 
-#### Self-introduction:  
-{summary_text}
+# ===== 生成按钮 =====
+if st.button("✏️ Generate Resume"):
+    with st.spinner("Generating resume..."):
+        try:
+            prompt = ai_prompt(user_data)
 
-#### Education:  
-**{user_data['school']}**  
-{user_data['degree']} degree in {user_data['major']} | Graduation: {user_data['edu_end']}  
-Relevant courses: {user_data['courses']}\n
-Academic achievements: 
-{academic_achievements}
+            response = client.chat.completions.create(
+                model="gpt-4o",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.2,
+                response_format={"type": "json_object"}
+            )
 
-#### Work Experience:  
-**{user_data['job_title']}** | {user_data['job_company']} — {user_data['job_location']} | {user_data['job_time']}  
-{work_result}
+            raw_output = response.choices[0].message.content
 
-#### Project Experience:  
-**{user_data['project_name']}** | {user_data['project_time']}  
-Technologies: {user_data['project_tech']} | Role: {user_data['project_role']}  
-{project_result}
+            if not raw_output:
+                st.error("❌ Model returned empty output")
+                st.stop()
 
-#### Skills:  
-{skills}
+            st.session_state.debug = raw_output
+
+            # ===== JSON解析函数 =====
+            def extract_json(text):
+                try:
+                    return json.loads(text)
+                except:
+                    pass
+
+                # 去掉 ```json ``` 包裹
+                text = text.strip()
+                if text.startswith("```"):
+                    text = text.split("```")[1]
+
+                try:
+                    return json.loads(text)
+                except:
+                    pass
+
+                start = text.find("{")
+                end = text.rfind("}")
+                if start != -1 and end != -1:
+                    return json.loads(text[start:end+1])
+                return None
+
+            result = extract_json(raw_output)
+            if not result:
+                st.error("❌ Failed to parse JSON")
+                st.write(raw_output)
+                st.stop()
+
+            # ===== 安全取值函数 =====
+            def get_safe(value, default=""):
+                if value is None:
+                    return default
+                return value
+
+            # ===== 构建简历 =====
+            resume = f"""
+**{user_data.get('name') or 'Your Name'}**  
+Mobile: {user_data.get('phone') or '-'}  
+Email: {user_data.get('email') or '-'}  
+{user_data.get('github') or ''}
+
+---
+
+### Summary
+{get_safe(result.get('summary'), '-')}
 """
-    st.subheader("📄 Generate result preview")
-    st.markdown(resume)
+            # ===== Education =====
+            # education uses user_data only
+            school = user_data.get("school")
+            degree = user_data.get("degree")
+            major = user_data.get("major")
+            year = user_data.get("edu_end")
 
+            resume += "### Education\n"
+            # First line
+            if major:
+                resume += f"{school} | {degree} in {major}  \n"
+            else:
+                resume += f"{school} | {degree}  \n"
+            # Second line (you control the format, don't let AI mess it up)
+            if year:
+                resume += f"Expected Graduation {year}  \n"
+            # Third line (just use user input, most reliable)
+            courses = user_data.get("courses")
+            if courses:
+                resume += f"\nCourses: {courses}\n"
 
-# python -m streamlit run app.py
+            # ==== Academic Achievements ====
+            edu_ach = get_safe(result.get("education_achievements"), [])
+            if edu_ach:
+                resume += "\n**Academic Achievements:**\n"
+                for b in edu_ach:
+                    resume += f"- {b}\n"
+
+            # ===== Work Experience =====
+            work = get_safe(result.get("work_experience"), [])
+            if work:
+                resume += "\n### Work Experience\n"
+                for job in work:
+                    # support dict or string
+                    if isinstance(job, dict):
+                        title_line = job.get("position_company_location_time", "")
+                        resume += f"**{title_line}**\n"
+                        for detail in job.get("details", []):
+                            # Mark empty details in red to prompt user to fill them in later
+                            if not detail.strip():
+                                resume += f"- <span style='color:red'>[Please fill]</span>\n"
+                            else:
+                                resume += f"- {detail}\n"
+                    else:
+                        resume += f"- {job}\n"
+
+            # ===== Project Experience =====
+            project = get_safe(result.get("project_experience"), [])
+            if project:
+                resume += "\n### Project Experience\n"
+                for proj in project:
+                    if isinstance(proj, dict):
+                        title_line = proj.get("name_role_time", "")
+                        resume += f"**{title_line}**\n"
+                        for detail in proj.get("details", []):
+                            if not detail.strip():
+                                resume += f"- <span style='color:red'>[Please fill]</span>\n"
+                            else:
+                                resume += f"- {detail}\n"
+                    else:
+                        resume += f"- {proj}\n"
+
+            # ===== Skills =====
+            skills_raw = result.get("skills")
+
+            resume += "\n### Skills\n"
+
+            # Situation1: ideal case (dict)
+            if isinstance(skills_raw, dict):
+                technical = skills_raw.get("technical", "")
+                languages = skills_raw.get("languages", "")
+                other = skills_raw.get("other", "")
+
+                if technical:
+                    resume += f"Technical: {technical}  \n"
+                if languages:
+                    resume += f"Languages: {languages}  \n"
+                if other:
+                    resume += f"Other: {other}  \n"
+
+            # Situation2: AI occasionally returns a string (fallback)
+            elif isinstance(skills_raw, str):
+                import re
+
+                # Automatically split into multiple lines
+                lines = re.split(r'(?=Technical:|Languages:|Other:)', skills_raw)
+
+                for line in lines:
+                    if line.strip():
+                        resume += f"{line.strip()}  \n"
+
+            # Situation3: Completely missing (防空)
+            else:
+                resume += "-\n"
+            
+            st.session_state.resume = resume
+
+        except Exception as e:
+            st.error(f"❌ Error: {e}")
+
+# ===== Display Result =====
+if st.session_state.resume:
+    st.subheader("📄 Generated Resume")
+    st.markdown(st.session_state.resume, unsafe_allow_html=True)
+
+# ===== Debug =====
+with st.expander("🔍 Debug (model raw output)"):
+    st.code(st.session_state.debug)
+
+#   python -m streamlit run app.py

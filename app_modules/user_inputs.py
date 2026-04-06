@@ -1,7 +1,7 @@
 import streamlit as st
 
 def collect_user_inputs():
-    # ===== 1. 基本信息 =====
+    # ===== 1. Fundamental Information =====
     st.header("🧑‍🎓 Personal information")
     col1, col2 = st.columns(2)
     with col1:
@@ -13,7 +13,7 @@ def collect_user_inputs():
         age = st.text_input("Age")
         gender = st.selectbox("Gender", ["", "Male", "Femal", "Others"])
 
-    # ===== 2. 教育背景 =====
+    # ===== 2. Education Background =====
     st.header("🎓 Education Background")
     school = st.text_input("School")
     edu_start = st.text_input("Year of enrollment")
@@ -23,7 +23,7 @@ def collect_user_inputs():
     courses = st.text_area("Related courses (optional)")
     edu_achievements = st.text_area("Academic achievements (grades, awards, etc.)")
 
-    # ===== 4. 工作经历（单段，后续可扩展为动态） =====
+    # ===== 3. Work Experience =====
     st.header("💼 Work Experience")
     job_title = st.text_input("Job title")
     job_company = st.text_input("Company name")
@@ -32,7 +32,7 @@ def collect_user_inputs():
     job_responsibilities = st.text_area("Work content (brief)")
     job_achievements = st.text_area("Work achievements (optional)")
 
-    # ===== 4.5 项目经历（单段，后续可扩展为动态） =====
+    # ===== 4. Project Experience =====
     st.header("🚀 Project Experience")
     project_name = st.text_input("Project name")
     project_description = st.text_area("Project description")
@@ -41,13 +41,13 @@ def collect_user_inputs():
     project_role = st.text_input("Your role in the project")
     project_achievements = st.text_area("Project achievements (optional)")
 
-    # ===== 5. 技能 =====
+    # ===== 5. Skills =====
     st.header("🧠 Skills")
     tech_skills = st.text_input("Technical skills")
-    lang_skills = st.text_input("language ability")
+    lang_skills = st.text_input("Language ability")
     soft_skills = st.text_input("Other skills")
 
-    # ===== 6. 自我介绍 & 求职方向 =====
+    # ===== 6. Self Introduction & Career Goal =====
     st.header("🎯 Job Objective and Introduction")
     career_goal = st.text_input("Target position/industry")
     intro_brief = st.text_area("Self-introduction (2-4 sentences)")
