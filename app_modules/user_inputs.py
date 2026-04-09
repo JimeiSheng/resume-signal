@@ -11,7 +11,7 @@ def collect_user_inputs():
     with col2:
         github = st.text_input("LinkedIn / GitHub (optional)")
         age = st.text_input("Age")
-        gender = st.selectbox("Gender", ["", "Male", "Femal", "Others"])
+        gender = st.selectbox("Gender", ["", "Male", "Female", "Others"])
 
     # ===== 2. Education Background =====
     st.header("🎓 Education Background")
