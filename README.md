@@ -5,24 +5,28 @@ Transform unstructured experiences into structured, impact-driven résumés — 
 ---
 
 ## Problem
-Many first-time job or internship applicants struggle with résumé writing. They often don’t know:
+Most first-time applicants struggle with writing a strong résumé.
 
-- What content to include  
-- How to phrase achievements in a professional way  
-- How to structure their résumé for maximum impact  
+They usually don’t know:
 
-Traditional templates and tools assume prior experience or knowledge, leaving beginners confused and frustrated.
+- What to include
+- How to describe their experience professionally
+- How to highlight impact instead of just responsibilities
+- How to structure a résumé that stands out
+
+Existing tools assume prior experience or professional writing skills, leaving beginners overwhelmed.
 
 ---
 
 ## Solution
-**resume-signal** helps users:
+**Resume Signal bridges the gap between raw experience and professional presentation.**
 
-- Convert informal descriptions into clear, professional résumé statements  
-- Build a structured résumé framework step by step  
-- Automatically prioritize achievements and skills by relevance  
+It helps users:
 
-This tool is especially suited for **high school students and early university students** who are writing their first résumé.
+- Turn informal descriptions into structured, professional résumé content
+- Guide users step-by-step through building their CV
+- Automatically enhance clarity, impact, and wording
+- Organize experiences into a recruiter-friendly structure
 
 ---
 
@@ -34,6 +38,36 @@ This tool is especially suited for **high school students and early university s
 
 ---
 
-## Demo
+## How it works
+- User enters raw experience (in natural language)
+- System extracts key information (role, task, context)
+- AI rewrites content into professional, impact-driven bullet points
+- Outputs a structured résumé ready to export or copy
 
-### Input
+---
+
+## Target User
+- High school students writing their first CV
+- First-year/second-year university students
+- Non-native English speakers applying for internships
+- Anyone unfamiliar with résumé conventions
+
+---
+
+## Why Resume Signal is different
+
+Unlike ChatGPT prompts or generic résumé templates, Resume Signal:
+
+- Provides structured input flow instead of free-form prompting
+- Ensures consistency and completeness of CV data
+- Focuses on thinking structure, not just rewriting text
+- Optimized specifically for first-time applicants
+
+---
+
+## Future Improvements
+- PDF / Word export
+- Multiple résumé templates (tech/business/academic)
+- AI-driven gap detection (missing dates, missing impact)
+- Cover letter generator
+- Import existing CV parsing
